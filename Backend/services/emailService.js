@@ -8,8 +8,9 @@ if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
 }
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
-  secure: false,
+  host: "smtp.gmail.com",
+  port: 587, // Use port 587 with STARTTLS instead of 465
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
@@ -17,19 +18,29 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false,
   },
+  // Add connection timeout
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 5000, // 5 seconds
+  socketTimeout: 10000, // 10 seconds
 });
 
-// Test the connection with better error logging
+// Test the connection with better error logging (don't block server startup)
 transporter.verify(function (error, success) {
   if (error) {
-    console.error("Email service error details:", {
+    console.warn("⚠️  Email service connection failed:", {
       name: error.name,
       message: error.message,
       code: error.code,
       command: error.command,
     });
+    console.warn("📧 Email notifications will be disabled. Check your network/firewall settings.");
+    console.warn("💡 Solutions:");
+    console.warn("   1. Check if your network allows outbound SMTP connections");
+    console.warn("   2. Try connecting from a different network");
+    console.warn("   3. Verify your Gmail App Password is correct");
+    console.warn("   4. Check if 2FA is enabled on your Gmail account");
   } else {
-    console.log("Email server is ready");
+    console.log("✅ Email server is ready");
   }
 });
 
@@ -49,9 +60,10 @@ const sendReminderEmail = async (to, habitName, time) => {
         </div>
       `,
     });
+    console.log(`📧 Reminder email sent successfully to ${to}`);
     return true;
   } catch (error) {
-    console.error("Email sending failed:", error);
+    console.warn(`⚠️  Email sending failed to ${to}:`, error.message);
     return false;
   }
 };
@@ -72,9 +84,10 @@ const sendMissedHabitEmail = async (to, habitName) => {
         </div>
       `,
     });
+    console.log(`📧 Missed habit email sent successfully to ${to}`);
     return true;
   } catch (error) {
-    console.error("Email sending failed:", error);
+    console.warn(`⚠️  Email sending failed to ${to}:`, error.message);
     return false;
   }
 };

@@ -166,7 +166,7 @@ const Challenges = () => {
     // Determine WebSocket URL based on environment
     const wsUrl = import.meta.env.DEV
       ? `ws://localhost:8000`
-      : `https://hackhazard.onrender.com`;
+      : `wss://${import.meta.env.VITE_API_URL.replace('https://', '')}`;
 
     const socket = new WebSocket(wsUrl);
 
